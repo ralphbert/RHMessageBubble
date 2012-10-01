@@ -3,18 +3,64 @@
 //  BMWBoerseUniversal
 //
 //  Created by Ralph Harrer on 28.06.11.
-//  Copyright 2011. All rights reserved.
 //
 
 #import <QuartzCore/QuartzCore.h>
 #import "RHMessageBubble.h"
 
 
+@interface RHMessageBubble (hidden)
+/**
+ * this methods are private! it is only for internal purpose.
+ * this method returns a ready configured RHBubbleView with a text and an optional spinner if not set to nil
+ * @param text a thext message to be shown in the bubble
+ * @param spinner if true a UIActivityIndicator will be added to the bubble above the text
+ * @return a RHBubbleView object containing the message and a spinner if not set to nil
+ */
++ (RHBubbleView*)getViewWithSpinnerAndText:(NSString*)text;
+
++ (RHBubbleView*)getViewWithSpinner;
+
++ (RHBubbleView*)getViewWithText:(NSString*)text;
+
++ (RHBubbleView*)getViewWithText:(NSString*)text andImageNamed:(NSString*)imageName;
+
++ (void)addBackground:(UIView*)view;
+
++ (void)addTopView:(UIView*)topView andBottomView:(UIView*)bottomView toView:(UIView*)view;
+
++ (UILabel*)getLabelWithText:(NSString*)text;
+
++ (void)addView:(UIView*)view centeredToParent:(UIView*)parent;
+
++ (void)addView:(UIView*)view toParent:(UIView*)parent onPosition:(CGPoint)position;
+@end
+
 //####################################################//
 //################  RHMessageBubble  #################//
 //####################################################//
 
 @implementation RHMessageBubble
+
++ (void)bubbleWithSuccessAddToView:(UIView*)view
+{
+    [RHMessageBubble bubbleWithSuccessWithMessage:nil addToView:view];
+}
+
++ (void)bubbleWithSuccessWithMessage:(NSString *)message addToView:(UIView *)view
+{
+    [RHMessageBubble bubbleWithString:message andImageNamed:RH_MESSAGE_BUBBLE_SUCCESS_IMAGE ToView:view forSeconds:RH_MESSAGE_BUBBLE_DEFAULT_TIME];
+}
+
++ (void)bubbleWithErrorAddToView:(UIView *)view
+{
+    [RHMessageBubble bubbleWithErrorWithMessage:nil addToView:view];
+}
+
++ (void)bubbleWithErrorWithMessage:(NSString *)message addToView:(UIView *)view
+{
+    [RHMessageBubble bubbleWithString:message andImageNamed:RH_MESSAGE_BUBBLE_ERROR_IMAGE ToView:view forSeconds:RH_MESSAGE_BUBBLE_DEFAULT_TIME];
+}
 
 /*#### String ####*/
 
@@ -255,7 +301,7 @@
 	NSInteger numLines = 1;
 	
 	if (size.width > (RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING)) {
-		NSInteger maxWidth = (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING);
+		NSInteger maxWidth = RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING;
 		CGFloat lines = (CGFloat)size.width / (CGFloat)maxWidth;
 		NSInteger rounded = (NSInteger)lines;
 		CGFloat over = lines - rounded;
@@ -265,11 +311,7 @@
 		numLines = rounded;
 	}
 	
-	CGRect rect = CGRectMake(
-                             RH_MESSAGE_BUBBLE_PADDING, 
-                             RH_MESSAGE_BUBBLE_PADDING, 
-                             (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), 
-                             (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING));
+	CGRect rect = CGRectMake(RH_MESSAGE_BUBBLE_PADDING, RH_MESSAGE_BUBBLE_PADDING, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING));
 	
 	UILabel* label = [RHMessageBubble getLabelWithText:text];
 	label.frame = rect;
@@ -297,7 +339,7 @@
 	NSInteger numLines = 1;
 	
 	if (size.width > (RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING)) {
-		NSInteger maxWidth = (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING);
+		NSInteger maxWidth = RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING;
 		CGFloat lines = (CGFloat)size.width / (CGFloat)maxWidth;
 		NSInteger rounded = (NSInteger)lines;
 		CGFloat over = lines - rounded;
@@ -307,7 +349,7 @@
 		numLines = rounded;
 	}
 	
-	CGRect rect = CGRectMake(0, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), numLines * lineHeight.height);
+	CGRect rect = CGRectMake(0, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(numLines * lineHeight.height));
 	
 	UILabel* label = [[UILabel alloc] initWithFrame:rect];
 	[label setText:text];
@@ -347,13 +389,23 @@
 		view.backgroundColor = [UIColor clearColor];
 		[RHMessageBubble addBackground:view];
 		
-		// adding label
-		UILabel* label = [RHMessageBubble getLabelWithText:text];
-	
-		[RHMessageBubble addTopView:imgView andBottomView:label toView:view];
-	
+        if (text != nil) {
+            // adding label
+            UILabel* label = [RHMessageBubble getLabelWithText:text];
+            [RHMessageBubble addTopView:imgView andBottomView:label toView:view];
+            [view bringSubviewToFront:label];
+        } else {
+            CGRect imgRect = imgView.frame;
+            CGPoint pos = CGPointMake(
+                                      (NSInteger)(view.frame.size.width - imgRect.size.width) / 2,
+                                      (NSInteger)(view.frame.size.height - imgRect.size.height) / 2);
+            imgRect.origin = pos;
+            imgView.frame = imgRect;
+            
+            [view addSubview:imgView];
+        }
+        
 		[view bringSubviewToFront:imgView];
-		[view bringSubviewToFront:label];
 		
 		return view;
 	} else {
@@ -374,7 +426,7 @@
 
 + (void)addTopView:(UIView*)topView andBottomView:(UIView*)bottomView toView:(UIView*)view
 {
-	UIView* container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING, 1)];
+	UIView* container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), 1)];
 	container.backgroundColor = [UIColor clearColor];
 	
 	NSInteger paddingBetween = 10;
@@ -382,7 +434,7 @@
 	CGRect rect = CGRectMake(RH_MESSAGE_BUBBLE_PADDING, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), topView.frame.size.height + bottomView.frame.size.height + paddingBetween);
 	container.frame = rect;
 	
-	NSInteger topViewCenter = (NSInteger)((RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2*RH_MESSAGE_BUBBLE_PADDING) / 2 - topView.frame.size.width / 2);
+	NSInteger topViewCenter = ((NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2*RH_MESSAGE_BUBBLE_PADDING) / 2 - topView.frame.size.width / 2);
 	
 	topView.frame = CGRectMake(topViewCenter, 
 							   0, 
@@ -417,8 +469,8 @@
 + (void)addView:(UIView*)view centeredToParent:(UIView*)parent
 {
 	CGRect frameRect = view.frame;
-	CGPoint loc = CGPointMake((NSInteger)(parent.frame.size.width/2 - frameRect.size.width/2), 
-							  (NSInteger)(parent.frame.size.height/2 - frameRect.size.height/2));
+	CGPoint loc = CGPointMake(parent.frame.size.width/2 - frameRect.size.width/2, 
+							  parent.frame.size.height/2 - frameRect.size.height/2);
 	[RHMessageBubble addView:view toParent:parent onPosition:loc];
 }
 
@@ -471,10 +523,14 @@
 	self.transform = CGAffineTransformMakeScale(3.0, 3.0);
 	self.hidden = NO;
 	
-	[UIView animateWithDuration:0.3 animations:^{
-		self.transform = CGAffineTransformIdentity;
-		self.alpha = 1.0;
-	}];
+    [UIView animateWithDuration:0.3 
+                          delay:0 
+                        options:UIViewAnimationOptionAllowUserInteraction 
+                     animations:^{
+                         self.transform = CGAffineTransformIdentity;
+                         self.alpha = 1.0;
+                     } 
+                     completion:nil];
 }
 
 - (void)showAndPerformSelector:(SEL)action target:(id)target after:(CGFloat)seconds
@@ -483,24 +539,32 @@
 	self.transform = CGAffineTransformMakeScale(3.0, 3.0);
 	self.hidden = NO;
 	
-	[UIView animateWithDuration:0.3 animations:^{
-		self.transform = CGAffineTransformIdentity;
-		self.alpha = 1.0;
-	} completion:^(BOOL finished){
-		if ([target respondsToSelector:action]) {
-			[target performSelector:action withObject:target afterDelay:seconds];
-		}
-	}];
+    [UIView animateWithDuration:0.3 
+                          delay:0 
+                        options:UIViewAnimationOptionAllowUserInteraction 
+                     animations:^{
+                         self.transform = CGAffineTransformIdentity;
+                         self.alpha = 1.0;
+                     } 
+                     completion:^(BOOL finished){
+                         if ([target respondsToSelector:action]) {
+                             [target performSelector:action withObject:target afterDelay:seconds];
+                         }
+                     }];
 }
 
 - (void)hideAndRemove
 {
-	[UIView animateWithDuration:0.3 animations:^{
-		self.alpha = 0;
-		self.transform = CGAffineTransformMakeScale(0.5, 0.5);
-	} completion:^(BOOL finished) {
-		[self removeFromSuperview];
-	}];
+    [UIView animateWithDuration:0.3 
+                          delay:0 
+                        options:UIViewAnimationOptionAllowUserInteraction 
+                     animations:^{
+                         self.alpha = 0;
+                         self.transform = CGAffineTransformMakeScale(0.5, 0.5);
+                     } 
+                     completion:^(BOOL finished){
+                         [self removeFromSuperview];
+                     }];
 }
 
 - (void)dealloc

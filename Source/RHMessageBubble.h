@@ -3,16 +3,20 @@
 //  BMWBoerseUniversal
 //
 //  Created by Ralph Harrer on 28.06.11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
 
+/* Resources */
+#define RH_MESSAGE_BUBBLE_ERROR_IMAGE @"error"
+#define RH_MESSAGE_BUBBLE_SUCCESS_IMAGE @"checkmark"
 
+/* Settings */
+#define RH_MESSAGE_BUBBLE_DEFAULT_TIME 2.0f
 #define RH_MESSAGE_BUBBLE_TAG 668
 #define RH_MESSAGE_BUBBLE_PADDING 10
-#define RH_MESSAGE_BUBBLE_SIDE_LENGTH 160
-#define RH_MESSAGE_BUBBLE_CORNER_RADIUS 10
+#define RH_MESSAGE_BUBBLE_SIDE_LENGTH 140
+#define RH_MESSAGE_BUBBLE_CORNER_RADIUS 20
 #define RH_MESSAGE_BUBBLE_IMAGE_MAX_WIDTH_HEIGHT 120
 
 /**
@@ -49,6 +53,34 @@
  */
 @interface RHMessageBubble : NSObject
 
+/* Shortcut-methods */
+
+/**
+ * shows a success bubble with a message for a predefined time
+ * @param message The message to show
+ * @param view The view the bubble should be added to
+ */
++ (void)bubbleWithSuccessWithMessage:(NSString*)message addToView:(UIView*)view;
+
+/**
+ * shows a success bubble for a predefined time
+ * @param view The view the bubble should be added to
+ */
++ (void)bubbleWithSuccessAddToView:(UIView*)view;
+
+/**
+ * shows an error bubble with a message for a predefined time
+ * @param message The message to show
+ * @param view The view the bubble should be added to
+ */
++ (void)bubbleWithErrorWithMessage:(NSString*)message addToView:(UIView*)view;
+
+/**
+ * shows an error bubble for a predefined time
+ * @param view The view the bubble should be added to
+ */
++ (void)bubbleWithErrorAddToView:(UIView*)view;
+
 /**
  * adds a RHBubbleView containing only a text to a view
  * @param text the message that should be shown
@@ -65,9 +97,6 @@
  */
 + (void)bubbleWithString:(NSString*)text toView:(UIView*)parent forSeconds:(CGFloat)seconds;
 + (void)bubbleWithString:(NSString*)text toView:(UIView*)parent forSeconds:(CGFloat)seconds onPosition:(CGPoint)position;
-
-
-
 
 /**
  * adds a RHBubbleView containing a UIActivityIndicator and a text to a view
@@ -102,28 +131,4 @@
  */
 + (void)removeBubbleFromView:(UIView*)parent;
 
-/**
- * this method is private! it is only for internal purpose.
- * this method returns a ready configured RHBubbleView with a text and an optional spinner if not set to nil
- * @param text a thext message to be shown in the bubble
- * @param spinner if true a UIActivityIndicator will be added to the bubble above the text
- * @return a RHBubbleView object containing the message and a spinner if not set to nil
- */
-+ (RHBubbleView*)getViewWithSpinnerAndText:(NSString*)text;
-
-+ (RHBubbleView*)getViewWithSpinner;
-
-+ (RHBubbleView*)getViewWithText:(NSString*)text;
-
-+ (RHBubbleView*)getViewWithText:(NSString*)text andImageNamed:(NSString*)imageName;
-
-+ (void)addBackground:(UIView*)view;
-
-+ (void)addTopView:(UIView*)topView andBottomView:(UIView*)bottomView toView:(UIView*)view;
-
-+ (UILabel*)getLabelWithText:(NSString*)text;
-
-+ (void)addView:(UIView*)view centeredToParent:(UIView*)parent;
-
-+ (void)addView:(UIView*)view toParent:(UIView*)parent onPosition:(CGPoint)position;
 @end
