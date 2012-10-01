@@ -112,6 +112,27 @@
 	}
 }
 
+- (IBAction)showBubbleWithSuccess:(id)sender
+{
+    [RHMessageBubble bubbleWithSuccessAddToView:self.view];
+}
+
+- (IBAction)showBubbleWithSuccessAndString:(id)sender
+{
+    [RHMessageBubble bubbleWithSuccessWithMessage:self.textField.text addToView:self.view];
+}
+
+- (IBAction)showBubbleWithError:(id)sender
+{
+    [RHMessageBubble bubbleWithErrorAddToView:self.view];
+}
+
+- (IBAction)showBubbleWithErrorAndString:(id)sender
+{
+    [RHMessageBubble bubbleWithErrorWithMessage:self.textField.text addToView:self.view];
+}
+
+
 - (IBAction)removeBubbleViews:(id)sender
 {
 	[RHMessageBubble removeBubbleFromView:self.view];

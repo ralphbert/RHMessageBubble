@@ -3,18 +3,64 @@
 //  BMWBoerseUniversal
 //
 //  Created by Ralph Harrer on 28.06.11.
-//  Copyright 2011. All rights reserved.
 //
 
 #import <QuartzCore/QuartzCore.h>
 #import "RHMessageBubble.h"
 
 
+@interface RHMessageBubble (hidden)
+/**
+ * this methods are private! it is only for internal purpose.
+ * this method returns a ready configured RHBubbleView with a text and an optional spinner if not set to nil
+ * @param text a thext message to be shown in the bubble
+ * @param spinner if true a UIActivityIndicator will be added to the bubble above the text
+ * @return a RHBubbleView object containing the message and a spinner if not set to nil
+ */
++ (RHBubbleView*)getViewWithSpinnerAndText:(NSString*)text;
+
++ (RHBubbleView*)getViewWithSpinner;
+
++ (RHBubbleView*)getViewWithText:(NSString*)text;
+
++ (RHBubbleView*)getViewWithText:(NSString*)text andImageNamed:(NSString*)imageName;
+
++ (void)addBackground:(UIView*)view;
+
++ (void)addTopView:(UIView*)topView andBottomView:(UIView*)bottomView toView:(UIView*)view;
+
++ (UILabel*)getLabelWithText:(NSString*)text;
+
++ (void)addView:(UIView*)view centeredToParent:(UIView*)parent;
+
++ (void)addView:(UIView*)view toParent:(UIView*)parent onPosition:(CGPoint)position;
+@end
+
 //####################################################//
 //################  RHMessageBubble  #################//
 //####################################################//
 
 @implementation RHMessageBubble
+
++ (void)bubbleWithSuccessAddToView:(UIView*)view
+{
+    [RHMessageBubble bubbleWithSuccessWithMessage:nil addToView:view];
+}
+
++ (void)bubbleWithSuccessWithMessage:(NSString *)message addToView:(UIView *)view
+{
+    [RHMessageBubble bubbleWithString:message andImageNamed:RH_MESSAGE_BUBBLE_SUCCESS_IMAGE ToView:view forSeconds:RH_MESSAGE_BUBBLE_DEFAULT_TIME];
+}
+
++ (void)bubbleWithErrorAddToView:(UIView *)view
+{
+    [RHMessageBubble bubbleWithErrorWithMessage:nil addToView:view];
+}
+
++ (void)bubbleWithErrorWithMessage:(NSString *)message addToView:(UIView *)view
+{
+    [RHMessageBubble bubbleWithString:message andImageNamed:RH_MESSAGE_BUBBLE_ERROR_IMAGE ToView:view forSeconds:RH_MESSAGE_BUBBLE_DEFAULT_TIME];
+}
 
 /*#### String ####*/
 
@@ -343,13 +389,23 @@
 		view.backgroundColor = [UIColor clearColor];
 		[RHMessageBubble addBackground:view];
 		
-		// adding label
-		UILabel* label = [RHMessageBubble getLabelWithText:text];
-	
-		[RHMessageBubble addTopView:imgView andBottomView:label toView:view];
-	
+        if (text != nil) {
+            // adding label
+            UILabel* label = [RHMessageBubble getLabelWithText:text];
+            [RHMessageBubble addTopView:imgView andBottomView:label toView:view];
+            [view bringSubviewToFront:label];
+        } else {
+            CGRect imgRect = imgView.frame;
+            CGPoint pos = CGPointMake(
+                                      (NSInteger)(view.frame.size.width - imgRect.size.width) / 2,
+                                      (NSInteger)(view.frame.size.height - imgRect.size.height) / 2);
+            imgRect.origin = pos;
+            imgView.frame = imgRect;
+            
+            [view addSubview:imgView];
+        }
+        
 		[view bringSubviewToFront:imgView];
-		[view bringSubviewToFront:label];
 		
 		return view;
 	} else {

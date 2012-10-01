@@ -21,6 +21,11 @@
 - (IBAction)showBubbleWithSpinner:(id)sender;
 - (IBAction)showBubbleWithSpinnerAndText:(id)sender;
 - (IBAction)showBubbleWithImageAndText:(id)sender;
+- (IBAction)showBubbleWithSuccess:(id)sender;
+- (IBAction)showBubbleWithSuccessAndString:(id)sender;
+- (IBAction)showBubbleWithError:(id)sender;
+- (IBAction)showBubbleWithErrorAndString:(id)sender;
+
 - (IBAction)removeBubbleViews:(id)sender;
 - (IBAction)switchChanged:(id)sender;
 - (IBAction)coordSwitchChanged:(id)sender;
