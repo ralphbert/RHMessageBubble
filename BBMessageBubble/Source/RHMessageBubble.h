@@ -17,7 +17,7 @@
 #define RH_MESSAGE_BUBBLE_PADDING 10
 #define RH_MESSAGE_BUBBLE_SIDE_LENGTH 140
 #define RH_MESSAGE_BUBBLE_CORNER_RADIUS 20
-#define RH_MESSAGE_BUBBLE_IMAGE_MAX_WIDTH_HEIGHT 120
+#define RH_MESSAGE_BUBBLE_IMAGE_MAX_WIDTH_HEIGHT 100
 
 /**
  * this class should not be instantiated directly. it is used by BBMessageBubble.
@@ -40,9 +40,14 @@
 - (void)showAndPerformSelector:(SEL)action target:(id)target after:(CGFloat)seconds;
 
 /**
- * hides the view and removes it afterwards from the parent view
+ * hides the view with an animation and removes it afterwards from the parent view
  */
 - (void)hideAndRemove;
+
+/**
+ * hides the view without animation and removes it from the parent view
+ */
+- (void)remove;
 
 @end
 

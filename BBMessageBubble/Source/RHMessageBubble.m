@@ -34,6 +34,21 @@
 + (void)addView:(UIView*)view centeredToParent:(UIView*)parent;
 
 + (void)addView:(UIView*)view toParent:(UIView*)parent onPosition:(CGPoint)position;
+
+/**
+ * shows the given buble view. but if already a bubble view exists in the parent view it will just be replaced without animation
+ */
++ (void)showOrReplaceBubbleView:(RHBubbleView*)bubbleView inParent:(UIView*)view;
+
+/**
+ * shows the given buble view. but if already a bubble view exists in the parent view it will just be replaced without animation. after the given time a selector will be performed
+ */
++ (void)showOrReplaceBubbleView:(RHBubbleView*)bubbleView inParent:(UIView*)view andPerformSelector:(SEL)action target:(id)target after:(NSTimeInterval)time;
+
+/**
+ * returns the RHBubbleView which "view" contains. nil will be returned if "view" does not contain a RHBubbleView instance.
+ */
++ (RHBubbleView*)bubbleViewInView:(UIView*)view;
 @end
 
 //####################################################//
@@ -41,6 +56,8 @@
 //####################################################//
 
 @implementation RHMessageBubble
+
+/*#### Shortcuts ####*/
 
 + (void)bubbleWithSuccessAddToView:(UIView*)view
 {
@@ -76,16 +93,12 @@
 
 + (void)bubbleWithString:(NSString*)text toView:(UIView*)parent forSeconds:(CGFloat)seconds
 {
-	[RHMessageBubble removeBubbleFromView:parent];
-	
-	RHBubbleView* view = [RHMessageBubble getViewWithText:text];
-	
-	[RHMessageBubble addView:view centeredToParent:parent];
-	
-	if (seconds > 0) {
-		[view showAndPerformSelector:@selector(hideAndRemove) target:view after:seconds];
+    RHBubbleView* view = [RHMessageBubble getViewWithText:text];
+    
+    if (seconds > 0) {
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent andPerformSelector:@selector(hideAndRemove) target:view after:seconds];
 	} else {
-		[view show];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent];
 	}
 }
 
@@ -118,16 +131,12 @@
 
 + (void)bubbleWithSpinnerToView:(UIView*)parent forSeconds:(CGFloat)seconds
 {
-	[RHMessageBubble removeBubbleFromView:parent];
-	
 	RHBubbleView* view = [RHMessageBubble getViewWithSpinner];
 	
-	[RHMessageBubble addView:view centeredToParent:parent];
-	
 	if (seconds > 0) {
-		[view showAndPerformSelector:@selector(hideAndRemove) target:view after:seconds];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent andPerformSelector:@selector(hideAndRemove) target:view after:seconds];
 	} else {
-		[view show];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent];
 	}
 }
 
@@ -160,16 +169,12 @@
 
 + (void)bubbleWithSpinnerAndString:(NSString*)text toView:(UIView*)parent forSeconds:(CGFloat)seconds
 {
-	[RHMessageBubble removeBubbleFromView:parent];
-	
 	RHBubbleView* view = [RHMessageBubble getViewWithSpinnerAndText:text];
 	
-	[RHMessageBubble addView:view centeredToParent:parent];
-	
 	if (seconds > 0) {
-		[view showAndPerformSelector:@selector(hideAndRemove) target:view after:seconds];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent andPerformSelector:@selector(hideAndRemove) target:view after:seconds];
 	} else {
-		[view show];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent];
 	}
 }
 
@@ -202,15 +207,12 @@
 
 + (void)bubbleWithString:(NSString*)text andImageNamed:(NSString*)imgName ToView:(UIView*)parent forSeconds:(CGFloat)seconds
 {
-	[RHMessageBubble removeBubbleFromView:parent];
-	
 	RHBubbleView* view = [RHMessageBubble getViewWithText:text andImageNamed:imgName];
-	[RHMessageBubble addView:view centeredToParent:parent];
 		
 	if (seconds > 0) {
-		[view showAndPerformSelector:@selector(hideAndRemove) target:view after:seconds];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent andPerformSelector:@selector(hideAndRemove) target:view after:seconds];
 	} else {
-		[view show];
+		[RHMessageBubble showOrReplaceBubbleView:view inParent:parent];
 	}
 }
 
@@ -238,10 +240,12 @@
 }
 
 
+#pragma mark -
+#pragma mark Private
 
-/*########################*/
-/*#### Helper methods ####*/
-/*########################*/
+/*#########################*/
+/*#### Private methods ####*/
+/*#########################*/
 
 + (RHBubbleView*)getViewWithSpinnerAndText:(NSString*)text
 {
@@ -251,7 +255,6 @@
 	view.backgroundColor = [UIColor clearColor];
 	
 	UILabel* label = [RHMessageBubble getLabelWithText:text];
-	
 
 	UIActivityIndicatorView* activityIndicator = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge] autorelease];
 	[activityIndicator startAnimating];
@@ -292,34 +295,7 @@
 	RHBubbleView* view = [[[RHBubbleView alloc] initWithFrame:CGRectMake(0, 0, maxSize.width, maxSize.height)] autorelease];
 	view.backgroundColor = [UIColor clearColor];
 	
-	/* 
-	 adding the text label to the bubble view: 
-	 firstly calculating the number of lines for the given text
-	 */
-	UIFont* font = [UIFont boldSystemFontOfSize:17];
-	CGSize size = [text sizeWithFont:font];
-	NSInteger numLines = 1;
-	
-	if (size.width > (RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING)) {
-		NSInteger maxWidth = RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING;
-		CGFloat lines = (CGFloat)size.width / (CGFloat)maxWidth;
-		NSInteger rounded = (NSInteger)lines;
-		CGFloat over = lines - rounded;
-		
-		if (over > 0) 
-			rounded++;
-		numLines = rounded;
-	}
-	
-	CGRect rect = CGRectMake(RH_MESSAGE_BUBBLE_PADDING, RH_MESSAGE_BUBBLE_PADDING, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING));
-	
 	UILabel* label = [RHMessageBubble getLabelWithText:text];
-	label.frame = rect;
-	label.numberOfLines = numLines;
-	label.textAlignment = UITextAlignmentCenter;
-	label.textColor = [UIColor whiteColor];
-	label.backgroundColor = [UIColor clearColor];
-	
 	[RHMessageBubble addView:label centeredToParent:view];
 	[RHMessageBubble addBackground:view];
 	[view bringSubviewToFront:label];
@@ -329,38 +305,22 @@
 
 + (UILabel*)getLabelWithText:(NSString*)text
 {
-	/* 
-	 adding the text label to the bubble view: 
-	 firstly calculating the number of lines for the given text
-	 */
-	UIFont* font = [UIFont boldSystemFontOfSize:17];
-	CGSize size = [text sizeWithFont:font];
-	CGSize lineHeight = [@"b" sizeWithFont:font];
-	NSInteger numLines = 1;
-	
-	if (size.width > (RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING)) {
-		NSInteger maxWidth = RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING;
-		CGFloat lines = (CGFloat)size.width / (CGFloat)maxWidth;
-		NSInteger rounded = (NSInteger)lines;
-		CGFloat over = lines - rounded;
-		
-		if (over > 0) 
-			rounded++;
-		numLines = rounded;
-	}
-	
-	CGRect rect = CGRectMake(0, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(numLines * lineHeight.height));
-	
-	UILabel* label = [[UILabel alloc] initWithFrame:rect];
+	// adding the text label to the bubble view
+    UIFont* font = [UIFont boldSystemFontOfSize:17];
+    CGSize size = [text sizeWithFont:font constrainedToSize:CGSizeMake((NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(RH_MESSAGE_BUBBLE_IMAGE_MAX_WIDTH_HEIGHT / (3.f/5.f))) lineBreakMode:NSLineBreakByWordWrapping];
+    
+    CGRect frame = CGRectMake(0, 0, size.width, size.height);
+    UILabel* label = [[UILabel alloc] initWithFrame:frame];
 	[label setText:text];
 	label.font = font;
-	label.numberOfLines = numLines;
+	label.numberOfLines = 0;
 	label.textAlignment = UITextAlignmentCenter;
 	label.textColor = [UIColor whiteColor];
 	label.backgroundColor = [UIColor clearColor];
+    [label setMinimumFontSize:13];
+    [label setAdjustsFontSizeToFitWidth:YES];
 	
 	return [label autorelease];
-
 }
 
 + (RHBubbleView*)getViewWithText:(NSString*)text andImageNamed:(NSString*)imageName
@@ -369,7 +329,8 @@
 	
 	if (img) {
 		UIImageView* imgView = [[[UIImageView alloc] initWithImage:img] autorelease];
-		[imgView setContentMode:UIViewContentModeCenter];
+		[imgView setContentMode:UIViewContentModeScaleAspectFit];
+        [imgView setClipsToBounds:YES];
 		
 		CGRect imgRect = imgView.frame;
 		
@@ -395,13 +356,7 @@
             [RHMessageBubble addTopView:imgView andBottomView:label toView:view];
             [view bringSubviewToFront:label];
         } else {
-            CGRect imgRect = imgView.frame;
-            CGPoint pos = CGPointMake(
-                                      (NSInteger)(view.frame.size.width - imgRect.size.width) / 2,
-                                      (NSInteger)(view.frame.size.height - imgRect.size.height) / 2);
-            imgRect.origin = pos;
-            imgView.frame = imgRect;
-            
+            imgView.center = view.center;
             [view addSubview:imgView];
         }
         
@@ -426,51 +381,48 @@
 
 + (void)addTopView:(UIView*)topView andBottomView:(UIView*)bottomView toView:(UIView*)view
 {
-	UIView* container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), 1)];
-	container.backgroundColor = [UIColor clearColor];
-	
-	NSInteger paddingBetween = 10;
-	
-	CGRect rect = CGRectMake(RH_MESSAGE_BUBBLE_PADDING, 0, (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), topView.frame.size.height + bottomView.frame.size.height + paddingBetween);
-	container.frame = rect;
-	
-	NSInteger topViewCenter = ((NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2*RH_MESSAGE_BUBBLE_PADDING) / 2 - topView.frame.size.width / 2);
-	
-	topView.frame = CGRectMake(topViewCenter, 
-							   0, 
-							   topView.frame.size.width, 
-							   topView.frame.size.height);
-	
-	NSInteger bottomViewCenter = (NSInteger)((RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2*RH_MESSAGE_BUBBLE_PADDING) / 2 - bottomView.frame.size.width / 2);
-	
-	bottomView.frame = CGRectMake(bottomViewCenter, 
-								  topView.frame.size.height + paddingBetween, 
-								  bottomView.frame.size.width, 
-								  bottomView.frame.size.height);
-	
-	[container addSubview:topView];
-	[container addSubview:bottomView];
-	
-	CGRect contRect = container.frame;
-	
-	contRect.origin.y = (NSInteger)(view.frame.size.height / 2 - container.frame.size.height / 2);
-	
-	if (bottomView.frame.size.height + topView.frame.size.height > RH_MESSAGE_BUBBLE_SIDE_LENGTH - RH_MESSAGE_BUBBLE_PADDING * 2) {
-		contRect.size.height = (NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - RH_MESSAGE_BUBBLE_PADDING * 2);
-	}
-	
-	container.frame = contRect;
-	
-	[view addSubview:container];
-	
-	[container release];
+    NSInteger paddingBetween = 7;
+    UIView* container = [[UIView alloc] init];
+    
+    CGFloat height = topView.frame.size.height + bottomView.frame.size.height + paddingBetween;
+    CGFloat maxHeight = RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2*RH_MESSAGE_BUBBLE_PADDING;
+    CGFloat maxWidth = maxHeight;
+    CGFloat newTopHeight = topView.frame.size.height;
+    
+    if (height > maxHeight) {
+        height = maxHeight;
+        CGFloat newHeightForTop = maxHeight - bottomView.frame.size.height - paddingBetween;
+        newTopHeight = newHeightForTop;
+    }
+    
+    // calculate y-coordinate to center both views within the container
+    CGFloat deltaTop = (NSInteger)((maxHeight - height) / 2.0f);
+    
+    // resize top view to fit content
+    CGRect newFrameTop = topView.frame;
+    newFrameTop.size = CGSizeMake(maxWidth, newTopHeight);
+    newFrameTop.origin = CGPointMake(0, deltaTop);
+    topView.frame = newFrameTop;
+    
+    // resize bottom view to fit content
+    CGRect newFrameBottom = bottomView.frame;
+    newFrameBottom.origin = CGPointMake(0, newFrameTop.origin.y + newFrameTop.size.height + paddingBetween);
+    newFrameBottom.size = CGSizeMake(maxWidth, newFrameBottom.size.height);
+    bottomView.frame = newFrameBottom;
+    
+    // position container
+    container.frame = CGRectMake(RH_MESSAGE_BUBBLE_PADDING, RH_MESSAGE_BUBBLE_PADDING, maxWidth, maxHeight);
+    [container addSubview:topView];
+    [container addSubview:bottomView];
+    
+    [view addSubview:container];
 }
 
 + (void)addView:(UIView*)view centeredToParent:(UIView*)parent
 {
 	CGRect frameRect = view.frame;
-	CGPoint loc = CGPointMake(parent.frame.size.width/2 - frameRect.size.width/2, 
-							  parent.frame.size.height/2 - frameRect.size.height/2);
+	CGPoint loc = CGPointMake((NSInteger)((parent.frame.size.width - frameRect.size.width)/2),
+							  (NSInteger)((parent.frame.size.height - frameRect.size.height)/2));
 	[RHMessageBubble addView:view toParent:parent onPosition:loc];
 }
 
@@ -483,6 +435,42 @@
 	[view setUserInteractionEnabled:NO];
 	[parent addSubview:view];
 	[parent bringSubviewToFront:view];
+}
+
++ (void)showOrReplaceBubbleView:(RHBubbleView*)bubbleView inParent:(UIView*)view
+{
+    RHBubbleView* oldBubbleView = [RHMessageBubble bubbleViewInView:view];
+    
+    if (oldBubbleView) {
+        // TODO add swap animation if needed
+        [RHMessageBubble addView:bubbleView centeredToParent:view];
+        
+        for (UIView* subview in [view subviews]) {
+            if (subview.tag == RH_MESSAGE_BUBBLE_TAG && [subview class] == [RHBubbleView class] && subview != bubbleView) {
+                [subview removeFromSuperview];
+            }
+        }
+    } else {
+        [RHMessageBubble addView:bubbleView centeredToParent:view];
+        [bubbleView show];
+    }
+}
+
++ (void)showOrReplaceBubbleView:(RHBubbleView*)bubbleView inParent:(UIView*)view andPerformSelector:(SEL)action target:(id)target after:(NSTimeInterval)time
+{
+    [RHMessageBubble showOrReplaceBubbleView:bubbleView inParent:view];
+    [target performSelector:action withObject:nil afterDelay:time];
+}
+
+
++ (RHBubbleView*)bubbleViewInView:(UIView*)view
+{
+    for (UIView* subview in [view subviews]) {
+		if (subview.tag == RH_MESSAGE_BUBBLE_TAG && [subview class] == [RHBubbleView class]) {
+			return (RHBubbleView*)subview;
+		}
+	}
+    return nil;
 }
 
 @end
@@ -548,7 +536,7 @@
                      } 
                      completion:^(BOOL finished){
                          if ([target respondsToSelector:action]) {
-                             [target performSelector:action withObject:target afterDelay:seconds];
+                             [target performSelector:action withObject:nil afterDelay:seconds];
                          }
                      }];
 }
@@ -565,6 +553,11 @@
                      completion:^(BOOL finished){
                          [self removeFromSuperview];
                      }];
+}
+
+- (void)remove
+{
+    [self removeFromSuperview];
 }
 
 - (void)dealloc
