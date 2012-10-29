@@ -307,7 +307,7 @@
 {
 	// adding the text label to the bubble view
     UIFont* font = [UIFont boldSystemFontOfSize:17];
-    CGSize size = [text sizeWithFont:font constrainedToSize:CGSizeMake((NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(RH_MESSAGE_BUBBLE_IMAGE_MAX_WIDTH_HEIGHT / (3.f/5.f))) lineBreakMode:NSLineBreakByWordWrapping];
+    CGSize size = [text sizeWithFont:font constrainedToSize:CGSizeMake((NSInteger)(RH_MESSAGE_BUBBLE_SIDE_LENGTH - 2 * RH_MESSAGE_BUBBLE_PADDING), (NSInteger)(RH_MESSAGE_BUBBLE_IMAGE_MAX_WIDTH_HEIGHT / (3.f/5.f))) lineBreakMode:UILineBreakModeWordWrap];
     
     CGRect frame = CGRectMake(0, 0, size.width, size.height);
     UILabel* label = [[UILabel alloc] initWithFrame:frame];
